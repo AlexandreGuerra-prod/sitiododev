@@ -1,14 +1,15 @@
 generator client {
-    provider = "prisma-client-js"
-    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
-    output = "/home/ubuntu/site-alexandre-guerra/nextjs_space/node_modules/.prisma/client"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
+// ... (seus models ContactSubmission e Postagem continuam aqui embaixo iguais)
 model ContactSubmission {
   id        String   @id @default(cuid())
   name      String
@@ -20,4 +21,13 @@ model ContactSubmission {
 
   @@index([createdAt])
   @@index([status])
+}
+
+model Postagem {
+  id        String   @id @default(cuid())
+  titulo    String
+  conteudo  String
+  links     String?  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
