@@ -1,9 +1,13 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
+  // 1. Evita que o Next.js tente processar o banco de dados durante o build da Vercel
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return NextResponse.json({ ok: true });
+  }
+
   try {
     const data = await request?.json?.();
     const name = data?.name ?? '';
@@ -17,12 +21,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Save to database
+    // 2. Importa o prisma de forma dinâmica apenas na execução da rota para blindar o build
+    const { prisma } = await import('@/lib/prisma');
+
+    // Salva a mensagem no banco de dados do Supabase
     await prisma.contactSubmission.create({
       data: { name, email, message },
     });
 
-    // Send email notification
+    // Envia a notificação de e-mail via Abacus.AI
     try {
       const appUrl = process.env.NEXTAUTH_URL || '';
       let senderEmail = 'noreply@mail.abacusai.app';
@@ -67,7 +74,7 @@ export async function POST(request: Request) {
       });
     } catch (emailError: any) {
       console.error('Erro ao enviar email:', emailError);
-      // Don't fail the request if email fails
+      // Não quebra a requisição se o envio do e-mail falhar, pois o banco já salvou
     }
 
     return NextResponse.json({ success: true, message: 'Mensagem enviada com sucesso!' });
